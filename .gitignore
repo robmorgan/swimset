@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/model/node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -37,3 +38,4 @@ next-env.d.ts
 
 # model training data
 model/training_data
+model/eng.traineddata
