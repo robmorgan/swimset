@@ -20,7 +20,14 @@ export async function generateWorkout(data: WorkoutFormData) {
       messages: [
         {
           role: "system",
-          content: `You are a swimming coach assistant that creates structured workouts. 
+          content: `You are a swimming coach assistant that creates structured workouts.
+
+          When creating a workout, you must follow these rules:
+          - Only the main set should be repeated.
+          - The warmup should be between 15% and 25% of the total distance respectively.
+          - The cooldown should be between 5% of the total distance respectively.
+          - The main set should be predominately freestyle.
+
           You must respond with a JSON object that contains:
           - description: string (the provided description)
           - sets: array of workout sets with the structure:
