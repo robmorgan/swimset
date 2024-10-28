@@ -25,8 +25,7 @@ import {
 import { WorkoutFormSchema, type WorkoutFormData } from "@/lib/types";
 import { generateWorkout, formatWorkout } from "./actions";
 import { useToast } from "@/hooks/use-toast";
-//import { Toast } from "@/components/ui/toast";
-//import { Toaster } from "@/components/ui/toaster"
+import { Icons } from "@/components/icons";
 
 export default function WorkoutGenerator() {
   const [workout, setWorkout] = useState<string | null>(null);
@@ -89,86 +88,101 @@ export default function WorkoutGenerator() {
         {!workout ? (
           <>
             <CardHeader>
-              <CardTitle className="text-2xl text-center">
+              <CardTitle
+                className={`
+          w-full max-w-xl
+          transition-all duration-500 ease-in-out
+          ${loading ? "h-[30px]" : workout ? "h-[auto]" : "h-[50px]"}
+        `}
+              >
                 Swimming Workout Generator
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-6"
-                >
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter description"
-                            maxLength={60}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="targetDistance"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Target Distance (meters)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="1800"
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="effort"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Effort</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+              {loading ? (
+                <div className="h-full flex flex-col items-center justify-center space-y-4">
+                  <Icons.spinner className="h-4 w-4 animate-spin" />
+                  <p className="text-sm text-muted-foreground">
+                    Generating your workout...
+                  </p>
+                </div>
+              ) : (
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select effort level" />
-                            </SelectTrigger>
+                            <Input
+                              placeholder="Enter description"
+                              maxLength={60}
+                              {...field}
+                            />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="easy">Easy</SelectItem>
-                            <SelectItem value="moderate">Moderate</SelectItem>
-                            <SelectItem value="hard">Hard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Generating..." : "Generate"}
-                  </Button>
-                </form>
-              </Form>
+                    <FormField
+                      control={form.control}
+                      name="targetDistance"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Target Distance (meters)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="1800"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="effort"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Effort</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select effort level" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="easy">Easy</SelectItem>
+                              <SelectItem value="moderate">Moderate</SelectItem>
+                              <SelectItem value="hard">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Generating..." : "Generate"}
+                    </Button>
+                  </form>
+                </Form>
+              )}
             </CardContent>
           </>
         ) : (
