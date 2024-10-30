@@ -19,18 +19,33 @@ export async function generateWorkout(data: WorkoutFormData) {
           content: `You are a swimming coach assistant that creates structured workouts.
 
           When creating a workout, you must follow these rules:
-          - Must include warmup, main set, and cool down set groups. Pre sets are optional.
-          - Only the main set should be repeated.
-          - The warmup should be between 15% and 25% of the total distance respectively.
-          - The cooldown should be between 5% of the total distance respectively.
-          - The main set should be predominately freestyle.
-          - If the overall effort level is "easy", the main set should be predominately 50m, 75m and 25m strokes.`,
+
+          1. EXACT DISTANCES
+            - Total distance must be ${data.targetDistance}m
+            - Warmup: between 15% and 25%. e.g: ${Math.round(
+              data.targetDistance * 0.2
+            )}m
+            - Main set: between 70 and 75%. e.g: ${Math.round(
+              data.targetDistance * 0.75
+            )}m
+            - Cooldown: between 5% and 10%. e.g: ${Math.round(
+              data.targetDistance * 0.05
+            )}m
+            - Use only 25m, 50m, 75m, 100m, 125m, 150m, 175m, 200m, 225m, 250m, 300m, 325m, 350m, 400m distances
+
+          2. SET STRUCTURE:
+            - Only the main set can be repeated (use the 'repeat' field)
+            - Warmup and cooldown should NOT be repeated
+            - Main set should be predominantly freestyle
+            - For easy effort sets, use 25m, 50m, 75m distances
+            - Must include warmup, main set and cool down. Pre sets are optional.
+          `,
         },
         {
           role: "user",
           content: `Create a swimming workout with:
           - Description: ${data.description}
-          - Total distance: ${data.targetDistance}m
+          - Target distance: ${data.targetDistance}m
           - Overall effort level: ${data.effort}
           - Must include at least one warmup, main set, and cool down
           - Return ONLY valid JSON, no other text`,
@@ -126,40 +141,3 @@ function calculateTotalDistance(workout: Workout): number {
 
 //   return sections.join("\n");
 // }
-
-export async function formatWorkout(workout: Workout): string {
-  const sections = [];
-
-  // Add header
-  sections.push(`🏊‍♂️ ${workout.description}\n`);
-
-  // Format each set group
-  for (const setGroup of workout.setGroups) {
-    // Add section title
-    sections.push(`*${setGroup.title}*`);
-
-    // If the set group has a repeat, indicate it
-    const repeatPrefix = setGroup.repeat ? `${setGroup.repeat}x ` : "";
-    if (repeatPrefix) {
-      sections.push(`Repeat ${repeatPrefix} times:`);
-    }
-
-    // Format each set item
-    setGroup.items.forEach((item) => {
-      let setText = `${item.repeat ? item.repeat + "x " : ""}${
-        item.distance
-      }m ${item.stroke}, ${item.effort} — ${item.time}`;
-      if (item.note) {
-        setText += ` (${item.note})`;
-      }
-      sections.push(setText);
-    });
-
-    sections.push(""); // Add spacing between groups
-  }
-
-  // Add total distance and time
-  sections.push(`Total: ${workout.totalDistance}m (${workout.totalTime})\n`);
-
-  return sections.join("\n");
-}

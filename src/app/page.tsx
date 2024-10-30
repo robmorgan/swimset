@@ -23,9 +23,47 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WorkoutFormSchema, type WorkoutFormData } from "@/lib/types";
-import { generateWorkout, formatWorkout } from "./actions";
+import { generateWorkout } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "@/components/icons";
+
+export function formatWorkout(workout: Workout): string {
+  const sections = [];
+
+  // Add header
+  sections.push(`🏊‍♂️ ${workout.description}\n`);
+
+  // Format each set group
+  for (const setGroup of workout.setGroups) {
+    // Add section title
+    sections.push(`*${setGroup.title}*`);
+
+    // If the set group has a repeat, indicate it
+    const repeatPrefix = setGroup.repeat ? `${setGroup.repeat}x ` : "";
+    if (repeatPrefix) {
+      sections.push(`Repeat ${repeatPrefix} times:`);
+    }
+
+    // Format each set item
+    setGroup.items.forEach((item) => {
+      let setText = `${item.repeat ? item.repeat + "x " : ""}${
+        item.distance
+      }m ${item.stroke}, ${item.effort} — ${item.time}`;
+      if (item.note) {
+        setText += ` (${item.note})`;
+      }
+      sections.push(setText);
+    });
+
+    sections.push(""); // Add spacing between groups
+  }
+
+  // Add total distance and time
+  //sections.push(`Total: ${workout.totalDistance}m (${workout.totalTime})\n`);
+  sections.push(`Total: ${workout.totalDistance}m\n`); // TODO - fix time
+
+  return sections.join("\n");
+}
 
 export default function WorkoutGenerator() {
   const [workout, setWorkout] = useState<string | null>(null);
@@ -96,6 +134,10 @@ export default function WorkoutGenerator() {
         `}
               >
                 Swimming Workout Generator
+                <br />
+                <span className="text-sm text-muted-foreground">
+                  By Rob Morgan
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
