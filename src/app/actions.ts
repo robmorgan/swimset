@@ -1,11 +1,8 @@
 "use server";
 
 import { OpenAI } from "openai";
-import {
-  WorkoutFormData,
-  WorkoutResponse,
-  WorkoutResponseSchema,
-} from "@/lib/types";
+import { zodResponseFormat } from "openai/helpers/zod";
+import { WorkoutFormData, WorkoutSchema, Workout } from "@/lib/types";
 import { z } from "zod";
 
 const openai = new OpenAI({
@@ -14,8 +11,7 @@ const openai = new OpenAI({
 
 export async function generateWorkout(data: WorkoutFormData) {
   try {
-    const completion = await openai.chat.completions.create({
-      //model: "gpt-4-turbo-preview",
+    const completion = await openai.beta.chat.completions.parse({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -23,23 +19,12 @@ export async function generateWorkout(data: WorkoutFormData) {
           content: `You are a swimming coach assistant that creates structured workouts.
 
           When creating a workout, you must follow these rules:
+          - Must include warmup, main set, and cool down set groups. Pre sets are optional.
           - Only the main set should be repeated.
           - The warmup should be between 15% and 25% of the total distance respectively.
           - The cooldown should be between 5% of the total distance respectively.
           - The main set should be predominately freestyle.
-
-          You must respond with a JSON object that contains:
-          - description: string (the provided description)
-          - sets: array of workout sets with the structure:
-            {
-              type: "warmup" | "main" | "cooldown"
-              repetitions: number
-              distance: number
-              stroke: string
-              effort: string
-              interval: string
-            }
-          - totalDistance: number (sum of all sets)`,
+          - If the overall effort level is "easy", the main set should be predominately 50m, 75m and 25m strokes.`,
         },
         {
           role: "user",
@@ -51,19 +36,16 @@ export async function generateWorkout(data: WorkoutFormData) {
           - Return ONLY valid JSON, no other text`,
         },
       ],
-      response_format: { type: "json_object" },
+      response_format: zodResponseFormat(WorkoutSchema, "workout"),
     });
 
-    const rawResponse = completion.choices[0].message.content;
-    if (!rawResponse) {
+    const parsedResponse = completion.choices[0].message.parsed;
+    if (!parsedResponse) {
       throw new Error("No response from GPT");
     }
 
-    // Parse the JSON response
-    const jsonResponse = JSON.parse(rawResponse);
-
-    // Validate the response against our schema
-    const parsedResponse = WorkoutResponseSchema.parse(jsonResponse);
+    // Manually calculate the distance
+    parsedResponse.totalDistance = calculateTotalDistance(parsedResponse);
 
     return {
       success: true as const,
@@ -84,52 +66,100 @@ export async function generateWorkout(data: WorkoutFormData) {
   }
 }
 
-export async function formatWorkout(workout: WorkoutResponse): string {
+function calculateTotalDistance(workout: Workout): number {
+  return workout.setGroups.reduce((totalDistance, setGroup) => {
+    const groupDistance = setGroup.items.reduce((groupSum, item) => {
+      const itemDistance = item.distance * (item.repeat || 1);
+      return groupSum + itemDistance;
+    }, 0);
+
+    return totalDistance + groupDistance * (setGroup.repeat || 1);
+  }, 0);
+}
+
+// export async function formatWorkout(workout: Workout): string {
+//   const sections = [];
+
+//   sections.push(`🏊‍♂️ ${workout.description}\n`);
+
+//   // Group sets by type
+//   const setsByType = workout.sets.reduce((acc, set) => {
+//     if (!acc[set.type]) {
+//       acc[set.type] = [];
+//     }
+//     acc[set.type].push(set);
+//     return acc;
+//   }, {} as Record<string, typeof workout.sets>);
+
+//   // Format each section
+//   if (setsByType.warmup) {
+//     sections.push("*Warmup*");
+//     setsByType.warmup.forEach((set) => {
+//       sections.push(
+//         `${set.repetitions} x ${set.distance} ${set.stroke}, ${set.effort} — ${set.interval}`
+//       );
+//     });
+//     sections.push("");
+//   }
+
+//   if (setsByType.main) {
+//     sections.push("*Main Set*");
+//     setsByType.main.forEach((set) => {
+//       sections.push(
+//         `${set.repetitions} x ${set.distance} ${set.stroke}, ${set.effort} — ${set.interval}`
+//       );
+//     });
+//     sections.push("");
+//   }
+
+//   if (setsByType.cooldown) {
+//     sections.push("*Cool Down*");
+//     setsByType.cooldown.forEach((set) => {
+//       sections.push(
+//         `${set.repetitions} x ${set.distance} ${set.stroke}, ${set.effort} — ${set.interval}`
+//       );
+//     });
+//     sections.push("");
+//   }
+
+//   sections.push(`Total: ${workout.totalDistance}m`);
+
+//   return sections.join("\n");
+// }
+
+export async function formatWorkout(workout: Workout): string {
   const sections = [];
 
+  // Add header
   sections.push(`🏊‍♂️ ${workout.description}\n`);
 
-  // Group sets by type
-  const setsByType = workout.sets.reduce((acc, set) => {
-    if (!acc[set.type]) {
-      acc[set.type] = [];
+  // Format each set group
+  for (const setGroup of workout.setGroups) {
+    // Add section title
+    sections.push(`*${setGroup.title}*`);
+
+    // If the set group has a repeat, indicate it
+    const repeatPrefix = setGroup.repeat ? `${setGroup.repeat}x ` : "";
+    if (repeatPrefix) {
+      sections.push(`Repeat ${repeatPrefix} times:`);
     }
-    acc[set.type].push(set);
-    return acc;
-  }, {} as Record<string, typeof workout.sets>);
 
-  // Format each section
-  if (setsByType.warmup) {
-    sections.push("*Warmup*");
-    setsByType.warmup.forEach((set) => {
-      sections.push(
-        `${set.repetitions} x ${set.distance} ${set.stroke}, ${set.effort} — ${set.interval}`
-      );
+    // Format each set item
+    setGroup.items.forEach((item) => {
+      let setText = `${item.repeat ? item.repeat + "x " : ""}${
+        item.distance
+      }m ${item.stroke}, ${item.effort} — ${item.time}`;
+      if (item.note) {
+        setText += ` (${item.note})`;
+      }
+      sections.push(setText);
     });
-    sections.push("");
+
+    sections.push(""); // Add spacing between groups
   }
 
-  if (setsByType.main) {
-    sections.push("*Main Set*");
-    setsByType.main.forEach((set) => {
-      sections.push(
-        `${set.repetitions} x ${set.distance} ${set.stroke}, ${set.effort} — ${set.interval}`
-      );
-    });
-    sections.push("");
-  }
-
-  if (setsByType.cooldown) {
-    sections.push("*Cool Down*");
-    setsByType.cooldown.forEach((set) => {
-      sections.push(
-        `${set.repetitions} x ${set.distance} ${set.stroke}, ${set.effort} — ${set.interval}`
-      );
-    });
-    sections.push("");
-  }
-
-  sections.push(`Total: ${workout.totalDistance}m`);
+  // Add total distance and time
+  sections.push(`Total: ${workout.totalDistance}m (${workout.totalTime})\n`);
 
   return sections.join("\n");
 }
