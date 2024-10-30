@@ -1,8 +1,6 @@
 import fs from "fs";
 import { z } from "zod";
-//import Tesseract from "tesseract.js";
-//import { createWorker } from "tesseract.js";
-import { Tesseract } from "tesseract.js";
+//import { Tesseract } from "tesseract.js";
 
 // Define a schema for a single set item
 const SetItemSchema = z.object({
@@ -30,10 +28,11 @@ const WorkoutSchema = z.object({
 
 // OCR function using tesseract.js
 async function extractTextFromImage(imagePath: string): Promise<string> {
-  const {
-    data: { text },
-  } = await Tesseract.recognize(imagePath, "eng");
-  return text;
+  // const {
+  //   data: { text },
+  // } = await Tesseract.recognize(imagePath, "eng");
+  // return text;
+  return "";
 }
 
 // async function extractTextFromImage(imagePath: string): Promise<string> {

@@ -22,12 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { WorkoutFormSchema, type WorkoutFormData } from "@/lib/types";
+import { WorkoutFormSchema, Workout, type WorkoutFormData } from "@/lib/types";
 import { generateWorkout } from "./actions";
 import { useToast } from "@/hooks/use-toast";
 import { Icons } from "@/components/icons";
 
-export function formatWorkout(workout: Workout): string {
+function formatWorkout(workout: Workout): string {
   const sections = [];
 
   // Add header

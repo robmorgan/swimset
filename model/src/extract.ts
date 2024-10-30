@@ -1,14 +1,21 @@
 import fs from "fs";
 import { z } from "zod";
-import Tesseract from "tesseract.js";
-import { Workout, SetItem, SetItemSchema, SetGroup } from "./schemas/workout";
+//import Tesseract from "tesseract.js";
+import {
+  Workout,
+  WorkoutSchema,
+  SetItem,
+  SetItemSchema,
+  SetGroup,
+} from "./schemas/workout";
 
 // OCR function using tesseract.js
 async function extractTextFromImage(imagePath: string): Promise<string> {
-  const {
-    data: { text },
-  } = await Tesseract.recognize(imagePath, "eng");
-  return text;
+  // const {
+  //   data: { text },
+  // } = await Tesseract.recognize(imagePath, "eng");
+  // return text;
+  return "";
 }
 
 export function parseSetItemLine(input: string): SetItem {
