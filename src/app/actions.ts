@@ -12,7 +12,7 @@ const openai = new OpenAI({
 export async function generateWorkout(data: WorkoutFormData) {
   try {
     const completion = await openai.beta.chat.completions.parse({
-      model: "gpt-4o-mini",
+      model: "gpt-4o-mini-2024-07-18",
       messages: [
         {
           role: "system",
