@@ -39,7 +39,7 @@ function formatWorkout(workout: Workout): string {
     sections.push(`*${setGroup.title}*`);
 
     // If the set group has a repeat, indicate it
-    const repeatPrefix = setGroup.repeat ? `${setGroup.repeat}x ` : "";
+    const repeatPrefix = setGroup.repeat ? `${setGroup.repeat}x` : "";
     if (repeatPrefix) {
       sections.push(`Repeat ${repeatPrefix} times:`);
     }

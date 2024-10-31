@@ -18,24 +18,26 @@ export async function generateWorkout(data: WorkoutFormData) {
           role: "system",
           content: `You are a swimming coach assistant that creates structured workouts.
 
+          Generate a swimming workout with a total distance of ${data.targetDistance} meters. The workout should be
+          divided into sets with a variety of strokes (freestyle, backstroke, breaststroke, and butterfly) and
+          distances for each set. Ensure that the sum of all distances in each set equals exactly ${data.targetDistance} meters.
+          Each set should be realistic and varied in length, but no individual segment should exceed 400 meters.
+
           When creating a workout, you must follow these rules:
 
           1. EXACT DISTANCES
-            - Total distance must be ${data.targetDistance}m
-            - Warmup: between 15% and 25%. e.g: ${Math.round(
-              data.targetDistance * 0.2
-            )}m
-            - Main set: between 70 and 75%. e.g: ${Math.round(
-              data.targetDistance * 0.75
-            )}m
-            - Cooldown: between 5% and 10%. e.g: ${Math.round(
-              data.targetDistance * 0.05
-            )}m
+            - Use one of the following formulas to construct each workout:
+               - Warmup: 15%, Main set: 70%, Cool down: 15%
+               - Warmup: 20%, Main set: 65%, Cool down: 15%
+               - Warmup: 25%, Main set: 65%, Cool down: 10%
+               - Warmup: 20%, Main set: 75%, Cool down: 5%
+               - Warmup: 15%, Pre Set: 15%, Main set: 60%, Cool down: 10%
             - Use only 25m, 50m, 75m, 100m, 125m, 150m, 175m, 200m, 225m, 250m, 300m, 325m, 350m, 400m distances
+            - Repeat set items or the main set to ensure the total distance is met
 
           2. SET STRUCTURE:
             - Only the main set can be repeated (use the 'repeat' field)
-            - Warmup and cooldown should NOT be repeated
+            - Warmup and cool down should NOT be repeated
             - Main set should be predominantly freestyle
             - For easy effort sets, use 25m, 50m, 75m distances
             - Must include warmup, main set and cool down. Pre sets are optional.
@@ -45,7 +47,6 @@ export async function generateWorkout(data: WorkoutFormData) {
           role: "user",
           content: `Create a swimming workout with:
           - Description: ${data.description}
-          - Target distance: ${data.targetDistance}m
           - Overall effort level: ${data.effort}
           - Must include at least one warmup, main set, and cool down
           - Return ONLY valid JSON, no other text`,
